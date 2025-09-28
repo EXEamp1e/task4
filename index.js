@@ -1,41 +1,37 @@
 const express = require('express');
 const app = express();
 
-// Middleware для обработки CORS
-app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'x-test, ngrok-skip-browser-warning, Content-Type, Accept, Access-Control-Allow-Headers');
-  res.setHeader('Content-Type', 'application/json');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
+// Middleware для статических файлов (если нужно)
+app.use(express.static('public'));
+
+// Маршрут /login - возвращает логин
+app.get('/login', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.send('038acec6-645a-4adb-a5ec-4fc12f83e8b8');
 });
 
-// Middleware для парсинга тела запроса как текста
-app.use(express.text({ type: '*/*' }));
-
-// Обработчик для маршрута /result4/
-app.all('/result4/', (req, res) => {
-  const xTestHeader = req.headers['x-test'] || '';
-  const body = req.body || '';
+// Маршрут /hour - возвращает текущий час по Москве
+app.get('/hour', (req, res) => {
+  // Создаем дату с московским временем (UTC+3)
+  const now = new Date();
+  const moscowTime = new Date(now.toLocaleString("en-US", {timeZone: "Europe/Moscow"}));
   
-  const responseData = {
-    message: '038acec6-645a-4adb-a5ec-4fc12f83e8b8',
-    'x-result': xTestHeader,
-    'x-body': body
-  };
+  // Получаем час и форматируем в HH
+  const hour = moscowTime.getHours();
+  const formattedHour = hour.toString().padStart(2, '0');
   
-  res.json(responseData);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.send(formattedHour);
 });
 
-// Обработчик для корневого маршрута
+// Корневой маршрут
 app.get('/', (req, res) => {
-  res.json({ 
-    info: 'Use /result4/ endpoint',
-    example: 'Send request with x-test header and body to get response'
+  res.json({
+    message: 'Server is running',
+    endpoints: {
+      '/login': 'Returns login',
+      '/hour': 'Returns current Moscow hour in HH format'
+    }
   });
 });
 
